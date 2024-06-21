@@ -110,13 +110,30 @@ function createPropSymbols(data, attributes){
 function updatePropSymbols(attribute){
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
-            //update the layer style and popup
+            //access feature properties
+            var props = layer.feature.properties;
+
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>City:</b> " + props.City + "</p>";
+
+            //add formatted attribute to panel content string
+            var year = attribute.split("_")[1];
+            popupContent += "<p><b>Average dew point in " + year + ":</b> " + props[attribute] + "°F</p>";
+
+            //update popup content            
+            popup = layer.getPopup();            
+            popup.setContent(popupContent).update();
         };
     });
 };
 
 //Create new sequence controls
 function createSequenceControls(){
+    
     //create range input element (slider)
     var slider = "<input class='range-slider' type='range'></input>";
     document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
@@ -126,23 +143,12 @@ function createSequenceControls(){
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
-    document.querySelectorAll('.step').forEach(function(step){
-        step.addEventListener("click", function(){
-            //sequence
-        })
-    });
-    //input listener for slider
-    document.querySelector('.range-slider').addEventListener('input', function(){            
-        //sequence
-        var index = this.value;
-
-        //pass new attribute to update symbols
-        updatePropSymbols(attributes[index]);
-    });
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
     document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>");
     document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>");
+
+    //click listener for buttons
     document.querySelectorAll('.step').forEach(function(step){
         step.addEventListener("click", function(){
             var index = document.querySelector('.range-slider').value;
@@ -164,7 +170,16 @@ function createSequenceControls(){
             //pass new attribute to update symbols
             updatePropSymbols(attributes[index]);
         })
-    })
+    });
+
+    //input listener for slider
+    document.querySelector('.range-slider').addEventListener('input', function(){            
+        //get the new index value
+        var index = this.value;
+
+        //pass new attribute to update symbols
+        updatePropSymbols(attributes[index]);
+    });
 };
 
 
@@ -190,6 +205,7 @@ function processData(data){
 
 //Import GeoJSON data
 function getData(){
+
     //load the data
     fetch("data/dewPointCities.geojson")
         .then(function(response){
