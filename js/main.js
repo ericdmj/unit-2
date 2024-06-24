@@ -55,7 +55,7 @@ function calcPropRadius(attValue) {
 
 
 //function to convert markers to circle markers
-function pointToLayer(feature, latlng, attributes){
+function pointToLayer(feature, latlng){
 
     //Determine the attribute for scaling the proportional symbols
     var attribute = attributes[0];
@@ -96,12 +96,12 @@ function pointToLayer(feature, latlng, attributes){
 };
 
 //Add circle markers for point features to the map
-function createPropSymbols(data, attributes){
+function createPropSymbols(data){
 
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
         pointToLayer: function(feature, latlng){
-            return pointToLayer(feature, latlng, attributes);
+            return pointToLayer(feature, latlng);
         }
     }).addTo(map);
 };
@@ -212,12 +212,12 @@ function getData(){
             return response.json();
         })
         .then(function(json){
-            //create variable to hold the attributes array
-            var attributes = processData(json);
+            //assign the global attributes array
+            attributes = processData(json);
             //calculate minimum data value
             minValue = calculateMinValue(json);
             //call function to create proportional symbols
-            createPropSymbols(json,attributes);
+            createPropSymbols(json);
             //call function to create sequence controls
             createSequenceControls();
         })
