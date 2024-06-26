@@ -4,7 +4,7 @@ var minValue;
 var attributes;
 
 //function to create map
-function createMap(){
+function createMap() {
 
     //create the map
     map = L.map('map', {
@@ -24,17 +24,17 @@ function createMap(){
     getData();
 };
 
-function calculateMinValue(data){
+function calculateMinValue(data) {
     //create empty array to store all data values
     var allValues = [];
     //loop through each city
-    for(var city of data.features){
+    for (var city of data.features) {
         //loop through each year
-        for(var year = 1960; year <= 2020; year+=10){
-              //get dew point for current year
-              var value = city.properties["dp_"+String(year)];
-              //add value to array
-              allValues.push(value);
+        for (var year = 1960; year <= 2020; year += 10) {
+            //get dew point for current year
+            var value = city.properties["dp_" + String(year)];
+            //add value to array
+            allValues.push(value);
         }
     }
     //get minimum value of our array
@@ -48,14 +48,13 @@ function calcPropRadius(attValue) {
     //constant factor adjusts symbol sizes evenly
     var minRadius = 5;
     //Flannery Apperance Compensation formula
-    var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
+    var radius = 1.0083 * Math.pow(attValue / minValue, 0.5715) * minRadius
 
     return radius;
 };
 
-
 //function to convert markers to circle markers
-function pointToLayer(feature, latlng){
+function pointToLayer(feature, latlng, attributes) {
 
     //Determine the attribute for scaling the proportional symbols
     var attribute = attributes[0];
@@ -87,7 +86,7 @@ function pointToLayer(feature, latlng){
 
     //bind the popup to the circle marker
     layer.bindPopup(popupContent, {
-        offset: new L.Point(0,-geojsonMarkerOptions.radius/2) 
+        offset: new L.Point(0, -geojsonMarkerOptions.radius / 2)
     });
 
     //return the circle marker to the L.geoJson pointToLayer option
@@ -96,20 +95,20 @@ function pointToLayer(feature, latlng){
 };
 
 //Add circle markers for point features to the map
-function createPropSymbols(data){
+function createPropSymbols(data, attributes) {
 
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
-        pointToLayer: function(feature, latlng){
-            return pointToLayer(feature, latlng);
+        pointToLayer: function (feature, latlng) {
+            return pointToLayer(feature, latlng, attributes);
         }
     }).addTo(map);
 };
 
 //Resize proportional symbols according to new attribute values
-function updatePropSymbols(attribute){
-    map.eachLayer(function(layer){
-        if (layer.feature && layer.feature.properties[attribute]){
+function updatePropSymbols(attribute) {
+    map.eachLayer(function (layer) {
+        if (layer.feature && layer.feature.properties[attribute]) {
             //access feature properties
             var props = layer.feature.properties;
 
@@ -125,40 +124,40 @@ function updatePropSymbols(attribute){
             popupContent += "<p><b>Average dew point in " + year + ":</b> " + props[attribute] + "°F</p>";
 
             //update popup content            
-            popup = layer.getPopup();            
+            popup = layer.getPopup();
             popup.setContent(popupContent).update();
         };
     });
 };
 
 //Create new sequence controls
-function createSequenceControls(){
-    
+function createSequenceControls() {
+
     //create range input element (slider)
     var slider = "<input class='range-slider' type='range'></input>";
-    document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
+    document.querySelector("#panel").insertAdjacentHTML('beforeend', slider);
 
     //set slider attributes
     document.querySelector(".range-slider").max = 6;
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse"></button>');
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward"></button>');
-    document.querySelector('#reverse').insertAdjacentHTML('beforeend',"<img src='img/reverse.png'>");
-    document.querySelector('#forward').insertAdjacentHTML('beforeend',"<img src='img/forward.png'>");
+    document.querySelector('#panel').insertAdjacentHTML('beforeend', '<button class="step" id="reverse"></button>');
+    document.querySelector('#panel').insertAdjacentHTML('beforeend', '<button class="step" id="forward"></button>');
+    document.querySelector('#reverse').insertAdjacentHTML('beforeend', "<img src='img/reverse.png'>");
+    document.querySelector('#forward').insertAdjacentHTML('beforeend', "<img src='img/forward.png'>");
 
     //click listener for buttons
-    document.querySelectorAll('.step').forEach(function(step){
-        step.addEventListener("click", function(){
+    document.querySelectorAll('.step').forEach(function (step) {
+        step.addEventListener("click", function () {
             var index = document.querySelector('.range-slider').value;
 
             //increment or decrement depending on button clicked
-            if (step.id == 'forward'){
+            if (step.id == 'forward') {
                 index++;
                 //if past the last attribute, wrap around to first attribute
                 index = index > 6 ? 0 : index;
-            } else if (step.id == 'reverse'){
+            } else if (step.id == 'reverse') {
                 index--;
                 //if past the first attribute, wrap around to last attribute
                 index = index < 0 ? 6 : index;
@@ -173,7 +172,7 @@ function createSequenceControls(){
     });
 
     //input listener for slider
-    document.querySelector('.range-slider').addEventListener('input', function(){            
+    document.querySelector('.range-slider').addEventListener('input', function () {
         //get the new index value
         var index = this.value;
 
@@ -182,19 +181,18 @@ function createSequenceControls(){
     });
 };
 
-
 //build an attributes array from the data
-function processData(data){
+function processData(data) {
     //empty array to hold attributes
-    var attributes = [];
+    attributes = [];
 
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
 
     //push each attribute name into attributes array
-    for (var attribute in properties){
+    for (var attribute in properties) {
         //only take attributes with population values
-        if (attribute.indexOf("dp") > -1){
+        if (attribute.indexOf("dp") > -1) {
             attributes.push(attribute);
         };
     };
@@ -202,25 +200,24 @@ function processData(data){
     return attributes;
 };
 
-
 //Import GeoJSON data
-function getData(){
+function getData() {
 
     //load the data
     fetch("data/dewPointCities.geojson")
-        .then(function(response){
+        .then(function (response) {
             return response.json();
         })
-        .then(function(json){
-            //assign the global attributes array
+        .then(function (json) {
+            //update the global attributes array
             attributes = processData(json);
             //calculate minimum data value
             minValue = calculateMinValue(json);
             //call function to create proportional symbols
-            createPropSymbols(json);
+            createPropSymbols(json, attributes);
             //call function to create sequence controls
             createSequenceControls();
         })
 };
 
-document.addEventListener('DOMContentLoaded',createMap)
+document.addEventListener('DOMContentLoaded', createMap)
